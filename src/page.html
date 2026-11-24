@@ -43,6 +43,7 @@ button,input,select{font:inherit;color:inherit}
 header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 h1{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;margin:0;letter-spacing:.02em;text-transform:uppercase}
 header p{margin:0;color:var(--muted);font-size:14px}
+#install{margin-left:auto;min-height:36px;padding:4px 12px;font-size:14px}
 .app{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:12px;min-height:0}
 .map{position:relative;min-height:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg)}
 canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
@@ -132,6 +133,7 @@ details ul{padding-left:18px}
 <header>
   <h1>Anthem Wayfinder</h1>
   <p>Step-free routes on Anthem of the Seas, from your cabin door to anywhere on board. Unofficial; built from the published deck plans.</p>
+  <button class="btn ghost" type="button" id="install" hidden>Install app</button>
 </header>
 
 <div class="app" data-tab="map">
@@ -197,6 +199,7 @@ details ul{padding-left:18px}
         <li><b>Venues change</b> with refits. If a name here doesn't match the ship, the location is usually still the same space.</li>
         <li><b>Port</b> is the left side of the ship when you face the bow; <b>starboard</b> is the right. Even-numbered outside cabins numbered x1xx–x3xx are port, x5xx–x7xx starboard.</li>
       </ul>
+      <p id="installNote" hidden><b>Use it offline:</b> install this as an app while you still have internet. In Chrome or Edge, press <b>Install app</b> at the top of the page or use the install icon in the address bar. On iPhone or iPad, open it in Safari, tap Share, then <b>Add to Home Screen</b>. After that it opens from its own icon with no connection.</p>
       <p>Your cabin number is saved only in this browser, so each person in your group can set their own.</p>
     </details>
   </div>
@@ -555,6 +558,14 @@ function start(saved){
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{colors();dirty=true;});
   new MutationObserver(()=>{colors();dirty=true;}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{dirty=true;});
+}
+/* installable app + offline cache: only where the page ships with a manifest (the hosted copy) */
+if(document.querySelector('link[rel="manifest"]')){
+  $('installNote').hidden=false; let deferred=null;
+  if('serviceWorker' in navigator&&location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('install').hidden=false;});
+  $('install').onclick=async()=>{ if(!deferred) return; deferred.prompt(); try{await deferred.userChoice;}catch(e){} deferred=null; $('install').hidden=true; };
+  window.addEventListener('appinstalled',()=>{$('install').hidden=true;});
 }
 const hot=window.claude&&window.claude.hot;
 if(hot&&hot.snapshot) hot.snapshot(()=>({start:state.start,dest:state.dest}));
