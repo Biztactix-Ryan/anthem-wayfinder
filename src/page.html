@@ -74,8 +74,21 @@ input[type=text],input[type=search],select{background:var(--bg);border:1px solid
 #cabin{width:130px;font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:.04em}
 .btn{min-height:44px;padding:8px 14px;border:1px solid var(--ink);background:var(--ink);color:var(--panel);border-radius:4px;cursor:pointer;font-weight:700}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-.fromline{font-size:15px}
-.fromline b{color:var(--start)}
+.fromline{font-size:14px;color:var(--muted)}
+.fromline b{color:var(--ink)}
+.trip{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:6px}
+.end{grid-column:1;display:grid;grid-template-columns:46px minmax(0,1fr);gap:0 8px;align-items:center;text-align:left;min-height:54px;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);cursor:pointer}
+.end .k{grid-row:1 / span 2;font-size:12px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.end .v{grid-column:2;font-weight:700;overflow-wrap:anywhere}
+.end .w{grid-column:2;font-size:13px;color:var(--muted)}
+.end .w:empty{display:none}
+.end.empty .v{font-weight:400;color:var(--muted)}
+.end[aria-pressed="true"]{border-color:var(--ink)}
+#pickFrom[aria-pressed="true"]{box-shadow:inset 5px 0 0 var(--start)}
+#pickTo[aria-pressed="true"]{box-shadow:inset 5px 0 0 var(--route)}
+.swapb{grid-column:2;grid-row:1 / span 2;border:1px solid var(--line);background:transparent;border-radius:4px;cursor:pointer;font-size:22px}
+.swapb:disabled{opacity:.4;cursor:default}
+.btn[aria-pressed="true"]{border-color:var(--lift)}
 .err{color:var(--warn-ink);background:var(--warn-bg);padding:6px 10px;border-radius:4px;font-size:14px}
 .route{border-top:2px solid var(--ink);padding-top:10px;display:flex;flex-direction:column;gap:10px}
 .route h2{font-family:var(--display);font-size:28px;line-height:1.05;margin:0;text-transform:uppercase;letter-spacing:.02em;text-wrap:balance}
@@ -97,9 +110,12 @@ ol.steps li::marker{font-weight:700}
 .find input{flex:1}
 .list{display:flex;flex-direction:column}
 .list h3{font-family:var(--display);font-size:18px;margin:12px 0 2px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.list button{display:grid;grid-template-columns:1fr auto;gap:0 10px;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:9px 2px;cursor:pointer;min-height:44px;align-items:center}
-.list button:hover{background:var(--bg)}
-.list button[aria-current="true"]{box-shadow:inset 4px 0 0 var(--route);padding-left:10px}
+.list .item{display:flex;border-bottom:1px solid var(--line)}
+.list .item:hover{background:var(--bg)}
+.list .go{flex:1;min-width:0;display:grid;grid-template-columns:1fr auto;gap:0 10px;text-align:left;background:transparent;border:0;padding:9px 2px;cursor:pointer;min-height:44px;align-items:center}
+.list .go[aria-current="true"]{box-shadow:inset 4px 0 0 var(--route);padding-left:10px}
+.list .fav{flex:0 0 46px;background:transparent;border:0;cursor:pointer;font-size:22px;line-height:1;color:var(--muted)}
+.list .fav[aria-pressed="true"]{color:var(--lift)}
 .list .n{font-weight:700}
 .list .p{font-size:13px;color:var(--muted);grid-column:1}
 .list .d{font-variant-numeric:tabular-nums;font-size:14px;grid-row:1 / span 2;grid-column:2;white-space:nowrap}
@@ -139,7 +155,7 @@ details ul{padding-left:18px}
 
 <header>
   <h1>Anthem Wayfinder</h1>
-  <p>Step-free routes on Anthem of the Seas, from your cabin door to anywhere on board. Unofficial; built from the published deck plans.</p>
+  <p>Step-free routes on Anthem of the Seas, from wherever you are to wherever you want to be. Unofficial; built from the published deck plans.</p>
   <button class="btn ghost hdr" type="button" id="install" hidden>Install app</button>
   <button class="btn ghost hdr" type="button" id="share" hidden>Share</button>
 </header>
@@ -182,27 +198,32 @@ details ul{padding-left:18px}
 
   <div class="panel">
     <section class="from" aria-labelledby="fromh">
-      <p class="eyebrow" id="fromh">Starting from</p>
-      <form class="row" id="cabinForm">
-        <label for="cabin" style="position:absolute;left:-9999px">Cabin number</label>
-        <input id="cabin" type="text" inputmode="numeric" autocomplete="off" placeholder="Cabin no." maxlength="5">
-        <button class="btn" type="submit">Set cabin</button>
-        <button class="btn ghost" type="button" id="swap" hidden>Swap start and destination</button>
-      </form>
+      <p class="eyebrow" id="fromh">Your trip</p>
+      <div class="trip">
+        <button class="end" type="button" id="pickFrom" aria-label="From: choose where you are"><span class="k">From</span><span class="v"></span><span class="w"></span></button>
+        <button class="end" type="button" id="pickTo" aria-label="To: choose where to go"><span class="k">To</span><span class="v"></span><span class="w"></span></button>
+        <button class="swapb" type="button" id="swap" aria-label="Swap start and destination">⇅</button>
+      </div>
       <div class="fromline" id="fromline"></div>
+      <form class="row" id="cabinForm">
+        <label for="cabin" class="eyebrow" style="margin:0">My cabin</label>
+        <input id="cabin" type="text" inputmode="numeric" autocomplete="off" placeholder="Cabin no." maxlength="5">
+        <button class="btn ghost" type="submit">Set cabin</button>
+      </form>
       <div class="err" id="cabinErr" hidden></div>
     </section>
 
     <section class="route" id="route" hidden aria-live="polite"></section>
-    <p class="route-empty">No destination yet. Choose one under Places, or tap a place on the map.</p>
+    <p class="route-empty">No route yet. Under Places, choose where you are and where you want to go, or tap a place on the map.</p>
 
     <section class="places" aria-labelledby="toh">
       <p class="eyebrow" id="toh">Where to?</p>
       <div class="find">
         <input id="q" type="search" placeholder="Search places, e.g. Solarium" aria-label="Search places">
         <select id="sort" aria-label="Sort places">
-          <option value="deck">By deck</option>
+          <option value="az">A to Z</option>
           <option value="near">Nearest first</option>
+          <option value="deck">By deck</option>
         </select>
       </div>
       <div class="chips" id="chips" role="group" aria-label="Filter by type" style="margin-top:8px"></div>
@@ -222,7 +243,7 @@ details ul{padding-left:18px}
         <li><b>Port</b> is the left side of the ship when you face the bow; <b>starboard</b> is the right. Even-numbered outside cabins numbered x1xx–x3xx are port, x5xx–x7xx starboard.</li>
       </ul>
       <p id="installNote" hidden><b>Use it offline:</b> install this as an app while you still have internet. In Chrome or Edge, press <b>Install app</b> at the top of the page or use the install icon in the address bar. On iPhone or iPad, open it in Safari, tap Share, then <b>Add to Home Screen</b>. After that it opens from its own icon with no connection. The <b>Share</b> button at the top gives other people a QR code, the link, or an offline copy of the map.</p>
-      <p>Your cabin number is saved only in this browser, so each person in your group can set their own.</p>
+      <p>Your cabin number and favourites are saved only in this browser, so each person in your group can set their own.</p>
     </details>
   </div>
 </div>
@@ -355,17 +376,19 @@ function walk(deck,P,Q){
 const serves=(B,d)=>d>=B.min&&d<=B.max;
 const LP=B=>({x:0,y:B.y});
 function routes(S,T){
-  let td=T.deck, warn='';
-  if(T.noLift){ td=15; warn=`The deck plans show only stairs between Deck 15 and this part of Deck 16. This route ends on Deck 15 directly below ${T.name}. Ask Guest Services whether a lift serves it.`; }
+  let sd=S.deck, td=T.deck, warn='';
+  const isle=S.noLift&&T.noLift;   // both on the Deck 16 aft island: walk straight across it
+  if(S.noLift&&!isle){ sd=15; warn=`The deck plans show only stairs between ${S.name} and Deck 15. This route starts on Deck 15 directly below it. `; }
+  if(T.noLift&&!isle){ td=15; warn+=`The deck plans show only stairs between Deck 15 and this part of Deck 16. This route ends on Deck 15 directly below ${T.name}. Ask Guest Services whether a lift serves it.`; }
   const out=[]; const mk=(key,title,legs)=>{const o={key,title,legs,warn,m:0,lifts:0}; legs.forEach(l=>{if(l.t==='walk')o.m+=l.m; else o.lifts++;}); out.push(o);};
   const ride=(B,a,b)=>({t:'lift',bank:B,from:a,to:b});
-  if(S.deck===td){ const P=anch(S,T.y),Q=anch(T,P.y); mk('direct','Same deck, no lift needed',[walk(td,P,Q)]); }
+  if(sd===td){ const P=anch(S,T.y),Q=anch(T,P.y); mk('direct','Same deck, no lift needed',[walk(td,P,Q)]); }
   else{
-    for(const B of Object.values(BANKS)) if(serves(B,S.deck)&&serves(B,td))
-      mk(B.key,'Via the '+B.name,[walk(S.deck,anch(S,B.y),LP(B)),ride(B,S.deck,td),walk(td,LP(B),anch(T,B.y))]);
-    if(S.deck!==4&&td!==4) for(const [a,b] of [['F','A'],['A','F']]){ const B1=BANKS[a],B2=BANKS[b];
-      if(serves(B1,S.deck)&&serves(B2,td))
-        mk('E'+a,'Via the Royal Esplanade (Deck 4)',[walk(S.deck,anch(S,B1.y),LP(B1)),ride(B1,S.deck,4),walk(4,LP(B1),LP(B2)),ride(B2,4,td),walk(td,LP(B2),anch(T,B2.y))]); }
+    for(const B of Object.values(BANKS)) if(serves(B,sd)&&serves(B,td))
+      mk(B.key,'Via the '+B.name,[walk(sd,anch(S,B.y),LP(B)),ride(B,sd,td),walk(td,LP(B),anch(T,B.y))]);
+    if(sd!==4&&td!==4) for(const [a,b] of [['F','A'],['A','F']]){ const B1=BANKS[a],B2=BANKS[b];
+      if(serves(B1,sd)&&serves(B2,td))
+        mk('E'+a,'Via the Royal Esplanade (Deck 4)',[walk(sd,anch(S,B1.y),LP(B1)),ride(B1,sd,4),walk(4,LP(B1),LP(B2)),ride(B2,4,td),walk(td,LP(B2),anch(T,B2.y))]); }
   }
   const best=Math.min(...out.map(o=>o.m));
   const keep=out.filter(o=>o.key[0]!=='E'||o.m<=best+12);
@@ -376,6 +399,7 @@ const rm=m=>m<10?Math.round(m):Math.round(m/5)*5;
 function longest(o){ let b=null; o.legs.forEach(l=>{if(l.t==='walk'&&(!b||l.m>b.m))b=l;}); return b; }
 function stepsFor(o,S,T){
   const st=[]; const dirw=dy=>dy<0?'forward, toward the bow':'aft, toward the stern';
+  const isle=S.noLift&&T.noLift, sn=S.noLift&&!isle?`the spot below ${S.name}`:S.name, tn=T.noLift&&!isle?`the spot below ${T.name}`:T.name;
   o.legs.forEach((l,i)=>{
     const first=i===0,last=i===o.legs.length-1;
     if(l.t==='lift'){ const n=Math.abs(l.to-l.from); st.push(`Take the ${l.bank.name} ${l.to>l.from?'up':'down'} ${n} deck${n>1?'s':''} to <b>Deck ${l.to}</b>.`); return; }
@@ -383,16 +407,16 @@ function stepsFor(o,S,T){
     if(first&&S.isCabin){
       let turn=''; if(Math.abs(S.x)>10&&Math.abs(l.dy)>3){ const fwd=l.dy<0; turn=(S.x<0)===fwd?' and turn left':' and turn right'; }
       s=`Leave cabin ${S.num}${turn}. `;
-      if(l.m<6) s+=nextLift?`The ${nextLift.bank.name} are right outside, about ${m} m.`:`${T.name} is about ${m} m away.`;
-      else s+=`Follow the ${l.cx<0?'port':'starboard'}-side corridor ${dirw(l.dy)}, for about <b>${m} m</b>`+(nextLift?` to the ${nextLift.bank.name}.`:` to ${T.name}.`);
+      if(l.m<6) s+=nextLift?`The ${nextLift.bank.name} are right outside, about ${m} m.`:`${tn[0].toUpperCase()+tn.slice(1)} is about ${m} m away.`;
+      else s+=`Follow the ${l.cx<0?'port':'starboard'}-side corridor ${dirw(l.dy)}, for about <b>${m} m</b>`+(nextLift?` to the ${nextLift.bank.name}.`:` to ${tn}.`);
     } else if(first){
-      s=l.m<6?`From ${S.name}, the ${nextLift?nextLift.bank.name:T.name} ${nextLift?'are':'is'} about ${m} m away.`
-        :`From ${S.name}, head ${dirw(l.dy)}, for about <b>${m} m</b>`+(nextLift?` to the ${nextLift.bank.name}.`:` to ${T.name}.`);
+      s=l.m<6?`From ${sn}, ${nextLift?'the '+nextLift.bank.name:tn} ${nextLift?'are':'is'} about ${m} m away.`
+        :`From ${sn}, head ${dirw(l.dy)}, for about <b>${m} m</b>`+(nextLift?` to the ${nextLift.bank.name}.`:` to ${tn}.`);
     } else if(!last){
       s=`Cross ${kind(l.deck)}, heading ${dirw(l.dy)}, for about <b>${m} m</b> to the ${nextLift.bank.name}.`;
     } else {
       const side=T.isCabin?(T.x<0?'port':'starboard')+' side':sideX(T.x); const at=side==='centre'?'in the centre of the ship':'on the '+side;
-      const name=T.noLift?`the spot below ${T.name}`:T.name;
+      const name=tn;
       s=l.m<6?`${name} is right by the lifts, ${at} (about ${m} m).`
         :`From the lifts, head ${dirw(l.dy)}, for about <b>${m} m</b> along ${kind(l.deck)}. ${name[0].toUpperCase()+name.slice(1)} is ${at}.`;
     }
@@ -407,7 +431,7 @@ if(typeof document!=='undefined'){
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d');
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
-const state={start:null,dest:null,opt:0,focus:null,cat:'all',q:'',sort:'deck'};
+const state={cabin:null,start:null,dest:null,pick:'to',opt:0,focus:null,cat:'all',q:'',sort:'az'};   // pick: which end of the trip the places list and map taps set
 const V={yaw:-1.15,pitch:0.62,zoom:1,px:0,py:0,gap:20};
 let C={},dirty=true,opts=[],W=0,H=0;
 const DECKS=Object.keys(D).map(Number).sort((a,b)=>a-b);
@@ -463,7 +487,8 @@ function render(){
         for(const c of d.cab){ const p=P(c[1]+c[3]/2,c[2]+c[4]/2,z); if(p[0]>0&&p[0]<W&&p[1]>0&&p[1]<H) ctx.fillText(c[0],p[0],p[1]); } }
       for(const v of VENUES) if(v.deck===n){ const p=P(v.x,v.y,z); const sel=T&&T.ref===v.id||S&&S.ref===v.id;
         ctx.beginPath(); ctx.arc(p[0],p[1],v.cat==='wc'?3:4,0,7); ctx.fillStyle=v.cat==='wc'?C.muted:C.accent; ctx.fill();
-        if(showNames&&!sel) labels.push({t:v.cat==='wc'?'WC':v.name.replace(/ \(.*\)$/,''),x:p[0],y:p[1],pr:sel?99:(v.cat==='wc'?0:1+v.ry/100),c:C.ink}); }
+        const fav=isFav(v); if(fav){ ctx.lineWidth=2; ctx.strokeStyle=C.lift; ctx.stroke(); }
+        if((showNames||fav)&&!sel) labels.push({t:(fav?'★ ':'')+(v.cat==='wc'?'WC':v.name.replace(/ \(.*\)$/,'')),x:p[0],y:p[1],pr:(v.cat==='wc'?0:1+v.ry/100)+(fav?5:0),c:C.ink}); }
     }
     // cabins that are start / destination
     for(const L of [S,T]) if(L&&L.isCabin&&L.deck===n){ const c=L.rect; ctx.beginPath(); ctx.moveTo(...P(c[1],c[2],z)); ctx.lineTo(...P(c[1]+c[3],c[2],z)); ctx.lineTo(...P(c[1]+c[3],c[2]+c[4],z)); ctx.lineTo(...P(c[1],c[2]+c[4],z)); ctx.closePath(); ctx.fillStyle=L===S?C.start:C.route; ctx.fill(); }
@@ -511,7 +536,7 @@ cv.addEventListener('keydown',e=>{ const k=e.key; if(k==='ArrowLeft')V.yaw+=.1; 
 function tap(e){ const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,P=projector(); let best=null,bd=22;
   for(const v of VENUES) if(level(v.deck)===2){ const p=P(v.x,v.y,zOf(v.deck)); const d=Math.hypot(p[0]-x,p[1]-y); if(d<bd){bd=d;best=v.id;} }
   if(!best) for(let i=DECKS.length-1;i>=0&&!best;i--){ const n=DECKS[i]; if(level(n)!==2) continue; const [ux,uy]=unproject(x,y,zOf(n)); const c=D[n].cab.find(c=>ux>=c[1]&&ux<=c[1]+c[3]&&uy>=c[2]&&uy<=c[2]+c[4]); if(c) best='c'+c[0]; }
-  if(!best) return; if(!state.start&&best[0]==='c') setStart(best); else setDest(best); }
+  if(!best) return; if(state.pick==='from'||(!state.start&&best[0]==='c')) setStart(best); else setDest(best); }
 $('zin').onclick=()=>zoomAt(cv.getBoundingClientRect().left+W/2,cv.getBoundingClientRect().top+H/2,1.35);
 $('zout').onclick=()=>zoomAt(cv.getBoundingClientRect().left+W/2,cv.getBoundingClientRect().top+H/2,1/1.35);
 $('v3d').onclick=()=>{V.yaw=W>H*1.1?-1.15:-.45;V.pitch=.62;fit();};
@@ -523,58 +548,91 @@ const isMobile=()=>window.matchMedia('(max-width:860px)').matches;
 const appEl=document.querySelector('.app');
 function setTab(t){ appEl.dataset.tab=t; document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===t)); document.querySelector('.panel').scrollTop=0; }
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
-function drawStrip(){ const el=$('strip'),S=locOf(state.start),T=locOf(state.dest),o=opts[state.opt]; let a,b,c,go;
-  if(T&&S&&o){ a=T.name; b=`${rm(o.m)} m · ${o.title.toLowerCase()} · Deck ${T.noLift?15:T.deck}`; c='Steps ›'; go='route'; }
-  else if(T){ a=T.name; b=whereIs(T)+' · set your cabin for a route'; c='Set cabin ›'; go='places'; }
-  else if(S){ a='From '+S.name; b='Choose where you want to go'; c='Places ›'; go='places'; }
-  else { a='Start with your cabin number'; b='Then pick a place for a step-free route'; c='Set cabin ›'; go='places'; }
+function drawStrip(){ const el=$('strip'),S=locOf(state.start),T=locOf(state.dest),o=opts[state.opt]; let a,b,c,go='places';
+  if(T&&S&&o){ a=T.name; b=`${rm(o.m)} m from ${S.name} · Deck ${o.legs[o.legs.length-1].deck}`; c='Steps ›'; go='route'; }
+  else if(state.pick==='from'){ a=T?'To '+T.name:'Where are you now?'; b='Tap the place you are at, or pick it under Places'; c='Places ›'; }
+  else if(S){ a='From '+S.name; b='Choose where you want to go'; c='Places ›'; }
+  else { a='Where are you now?'; b='Set your cabin or pick a place, then choose where to go'; c='Start ›'; }
   el.querySelector('.a').textContent=a; el.querySelector('.b').textContent=b; el.querySelector('.c').textContent=c; el.onclick=()=>setTab(go);
   $('tabRoute').textContent=T&&S&&o?`Route · ${rm(o.m)} m`:'Route'; }
 function buildRail(){ const rail=$('rail'); rail.innerHTML=''; const all=document.createElement('button'); all.type='button'; all.className='all'; all.textContent='ALL'; all.setAttribute('aria-pressed',state.focus==null); all.onclick=()=>{state.focus=null;refresh(true);}; rail.appendChild(all);
   const r=opts[state.opt]; const on=new Set(); if(r) r.legs.forEach(l=>{ if(l.t==='walk') on.add(l.deck); });
   for(const n of [...DECKS].reverse()){ const b=document.createElement('button'); b.type='button'; b.textContent=n; b.setAttribute('aria-label','Deck '+n); b.setAttribute('aria-pressed',state.focus===n); if(on.has(n)) b.className='on-route'; b.onclick=()=>{state.focus=state.focus===n?null:n; refresh(true);}; rail.appendChild(b); } }
-function setStart(ref){ state.start=ref; state.opt=0; if(state.dest===ref) state.dest=null; store.set('anthem-start',ref); $('cabinErr').hidden=true; if(ref&&ref[0]==='c') $('cabin').value=ref.slice(1); state.focus=null; refresh(true); }
-function setDest(ref){ state.dest=ref; state.opt=0; if(state.start) state.focus=null; else { const l=locOf(ref); state.focus=l?l.deck:null; } refresh(true); if(isMobile()&&appEl.dataset.tab==='places') setTab('route'); }
+function setCabin(ref){ state.cabin=ref; store.set('anthem-cabin',ref); $('cabin').value=ref.slice(1); setStart(ref); }
+function setStart(ref){ state.start=ref; state.opt=0; if(state.dest===ref) state.dest=null; $('cabinErr').hidden=true; state.focus=null; state.pick='to'; refresh(true); if(isMobile()&&appEl.dataset.tab==='places'&&state.dest) setTab('route'); }
+function setDest(ref){ if(state.start===ref) state.start=null; state.dest=ref; state.opt=0;
+  if(state.start){ state.focus=null; state.pick='to'; } else { const l=locOf(ref); state.focus=l?l.deck:null; state.pick='from'; }
+  refresh(true); if(isMobile()&&appEl.dataset.tab==='places'){ if(state.start) setTab('route'); else document.querySelector('.panel').scrollTop=0; } }
 $('cabinForm').addEventListener('submit',e=>{ e.preventDefault(); const v=$('cabin').value.trim(); const l=/^\d{4,5}$/.test(v)?cabinLoc(v):null;
   if(!l){ const er=$('cabinErr'); er.textContent=v?`No cabin ${v} on the deck plans. Cabin numbers run from 3146 to 13718; check your SeaPass card.`:'Type the cabin number from your SeaPass card, for example 9234.'; er.hidden=false; return; }
-  setStart(l.ref); });
-$('swap').onclick=()=>{ const a=state.start; state.start=state.dest; state.dest=a; state.opt=0; store.set('anthem-start',state.start); const s=locOf(state.start); $('cabin').value=s&&s.isCabin?s.num:''; refresh(true); };
+  setCabin(l.ref); });
+$('swap').onclick=()=>{ const a=state.start; state.start=state.dest; state.dest=a; state.opt=0; state.pick=state.start?'to':'from'; refresh(true); };
+$('pickFrom').onclick=()=>{state.pick='from';refresh(false);};
+$('pickTo').onclick=()=>{state.pick='to';refresh(false);};
 $('q').addEventListener('input',e=>{state.q=e.target.value.toLowerCase();drawList();});
 $('sort').addEventListener('change',e=>{state.sort=e.target.value;drawList();});
 function drawChips(){ const el=$('chips'); el.innerHTML=''; for(const [k,t] of CATS){ const b=document.createElement('button'); b.type='button'; b.textContent=t; b.setAttribute('aria-pressed',state.cat===k); b.onclick=()=>{state.cat=k;drawChips();drawList();}; el.appendChild(b);} }
-function drawList(){ const el=$('list'); el.innerHTML=''; const S=locOf(state.start);
-  let vs=VENUES.filter(v=>(state.cat==='all'?true:v.cat===state.cat)&&(!state.q||v.name.toLowerCase().includes(state.q))).map(v=>({v,m:S?routes(S,v)[0].m:null}));
-  if(state.sort==='near'&&S) vs.sort((a,b)=>a.m-b.m); else vs.sort((a,b)=>b.v.deck-a.v.deck||a.v.y-b.v.y);
-  if(!vs.length){ el.innerHTML='<p style="color:var(--muted)">Nothing matches. Clear the search or pick another filter.</p>'; return; }
-  let cur=null; for(const {v,m} of vs){ if(!(state.sort==='near'&&S)&&v.deck!==cur){ cur=v.deck; const h=document.createElement('h3'); h.textContent='Deck '+cur; el.appendChild(h); }
-    const b=document.createElement('button'); b.type='button'; if(state.dest===v.id) b.setAttribute('aria-current','true');
-    b.innerHTML=`<span class="n"></span><span class="d">${m!=null?rm(m)+' m':''}</span><span class="p">${state.sort==='near'&&S?'Deck '+v.deck+' · ':''}${zoneY(v.y)} · ${sideX(v.x)}</span>`; b.firstChild.textContent=v.name; b.onclick=()=>setDest(v.id); el.appendChild(b); } }
-function drawFrom(){ const S=locOf(state.start), el=$('fromline'); $('swap').hidden=!(state.start&&state.dest);
-  if(!S){ el.innerHTML='Type your cabin number to get step-free routes from your door. It stays on this device.'; return; }
-  let h=`<b>${S.name}</b> · ${whereIs(S)}`;
-  if(S.isCabin){ const a=walk(S.deck,anch(S,BANKS.A.y),LP(BANKS.A)).m,f=walk(S.deck,anch(S,BANKS.F.y),LP(BANKS.F)).m; h+=`<br>Nearest lifts: <b style="color:inherit">${a<=f?'aft':'forward'}, about ${rm(Math.min(a,f))} m</b> (the ${a<=f?'forward':'aft'} lifts are ${rm(Math.max(a,f))} m).`; }
-  el.innerHTML=h; }
+const favKey=v=>v.deck+':'+v.name;   // not the list index, so favourites survive edits to VENUES
+let favs=new Set(); try{ favs=new Set(JSON.parse(store.get('anthem-favs')||'[]')); }catch(e){}
+const isFav=v=>favs.has(favKey(v));
+function toggleFav(v){ const k=favKey(v), a=document.activeElement, inRoute=a&&a.id==='favT'; favs.has(k)?favs.delete(k):favs.add(k); store.set('anthem-favs',JSON.stringify([...favs])); refresh(false);
+  const n=inRoute?$('favT'):$('list').querySelector('.fav[data-id="'+v.id+'"]'); if(n) n.focus(); }
+function drawList(){ const el=$('list'); el.innerHTML=''; const S=locOf(state.start),T=locOf(state.dest),from=state.pick==='from',other=from?T:S,cur=from?state.start:state.dest;
+  $('toh').textContent=from?'Where are you now?':'Where to?';
+  const near=state.sort==='near'&&!!other, byDeck=state.sort==='deck';
+  const vs=VENUES.filter(v=>!(other&&other.ref===v.id)&&(state.cat==='all'||v.cat===state.cat)&&(!state.q||v.name.toLowerCase().includes(state.q))).map(v=>({v,f:isFav(v),m:other&&other.ref!==v.id?(from?routes(v,other):routes(other,v))[0].m:null}));
+  vs.sort((a,b)=>(b.f-a.f)||(near?a.m-b.m:byDeck?(b.v.deck-a.v.deck||a.v.y-b.v.y):0)||a.v.name.localeCompare(b.v.name)||a.v.deck-b.v.deck);
+  const note=t=>{ const p=document.createElement('p'); p.className='time'; p.style.margin='8px 0 0'; p.textContent=t; el.appendChild(p); };
+  const head=t=>{ const h=document.createElement('h3'); h.textContent=t; el.appendChild(h); };
+  const pick=ref=>from?setStart(ref):setDest(ref);
+  const add=(name,sub,dist,on,go,v)=>{ const row=document.createElement('div'); row.className='item'; const b=document.createElement('button'); b.type='button'; b.className='go'; if(on) b.setAttribute('aria-current','true');
+    b.innerHTML='<span class="n"></span><span class="d"></span><span class="p"></span>'; b.children[0].textContent=name; b.children[1].textContent=dist; b.children[2].textContent=sub; b.onclick=go; row.appendChild(b);
+    if(v){ const s=document.createElement('button'); s.type='button'; s.className='fav'; s.dataset.id=v.id; s.textContent=isFav(v)?'★':'☆'; s.setAttribute('aria-pressed',isFav(v)); s.setAttribute('aria-label','Favourite: '+v.name); s.onclick=()=>toggleFav(v); row.appendChild(s); }
+    el.appendChild(row); };
+  const cab=locOf(state.cabin);
+  if(cab&&state.cabin!==state.start&&state.cabin!==state.dest&&state.cat==='all'&&!state.q) add('My cabin, '+cab.num,whereIs(cab),'',false,()=>pick(cab.ref));
+  if(!vs.length){ note('Nothing matches. Clear the search or pick another filter.'); return; }
+  if(!favs.size) note('Tap a star to keep a place at the top of this list.');
+  const anyFav=vs[0].f; let grp=null;
+  for(const {v,f,m} of vs){ const g=f?'Favourites':byDeck&&!near?'Deck '+v.deck:anyFav?'Everywhere else':null; if(g&&g!==grp){ grp=g; head(g); }
+    add(v.name,whereIs(v),m!=null?rm(m)+' m':'',cur===v.id,()=>pick(v.id),v); } }
+function drawTrip(){ const S=locOf(state.start),T=locOf(state.dest),el=$('fromline');
+  const fill=(id,L,ph,on)=>{ const b=$(id); b.setAttribute('aria-pressed',on); b.classList.toggle('empty',!L); b.querySelector('.v').textContent=L?L.name:ph; b.querySelector('.w').textContent=L?whereIs(L):''; };
+  fill('pickFrom',S,'Choose where you are',state.pick==='from'); fill('pickTo',T,'Choose where to go',state.pick==='to');
+  $('swap').disabled=!(state.start||state.dest);
+  let h='';
+  if(S&&S.isCabin){ const a=walk(S.deck,anch(S,BANKS.A.y),LP(BANKS.A)).m,f=walk(S.deck,anch(S,BANKS.F.y),LP(BANKS.F)).m; h=`Nearest lifts to cabin ${S.num}: <b>${a<=f?'aft':'forward'}, about ${rm(Math.min(a,f))} m</b> (the ${a<=f?'forward':'aft'} lifts are ${rm(Math.max(a,f))} m).`; }
+  else if(!state.cabin) h='Add your cabin number to start from your own door. It stays on this device.';
+  el.innerHTML=h; el.hidden=!h; }
 function drawRoute(){ const el=$('route'),S=locOf(state.start),T=locOf(state.dest); opts=[];
   if(!T){ el.hidden=true; return; } el.hidden=false;
   let h=`<div><h2></h2><p class="where">${whereIs(T)}${T.note?' · '+T.note:''}</p></div>`;
-  if(!S){ el.innerHTML=h+'<p class="warn">Set a cabin above to see the route. The map is showing where this is.</p><button class="btn ghost" type="button" id="useStart">Start from here instead</button>'; el.querySelector('h2').textContent=T.name; $('useStart').onclick=()=>{const d=state.dest;state.dest=null;setStart(d);}; return; }
+  if(!S){ el.innerHTML=h+'<p class="warn">Choose where you are starting from to see the route: set your cabin or pick the place you are at. The map is showing where this is.</p><div class="row"><button class="btn" type="button" id="pickS">Choose where I am</button><button class="btn ghost" type="button" id="useStart">Start from here instead</button></div>'; el.querySelector('h2').textContent=T.name;
+    $('pickS').onclick=()=>{state.pick='from';refresh(false); if(isMobile()) setTab('places');}; $('useStart').onclick=()=>{const d=state.dest;state.dest=null;setStart(d);}; return; }
+  h+='<p class="where">From <b class="fromname"></b></p>';
   opts=routes(S,T); if(state.opt>=opts.length) state.opt=0; const o=opts[state.opt];
   if(opts.length>1){ h+='<div class="opts" role="group" aria-label="Route options">'; opts.forEach((p,i)=>{ const L=longest(p); h+=`<button type="button" class="opt" data-i="${i}" aria-pressed="${i===state.opt}"><span class="t">${p.title}</span><span class="m">${rm(p.m)} m</span><span class="s">${p.lifts} lift ride${p.lifts>1?'s':''} · longest stretch ${rm(L.m)} m on ${kind(L.deck).replace(/,.*| \(.*/,'')}</span></button>`; }); h+='</div>';
     if(Math.abs(opts[0].m-opts[opts.length-1].m)<=12) h+='<p class="time">These options are the same distance. The choice is which deck you do the long stretch on.</p>'; }
   h+='<ol class="steps">'+stepsFor(o,S,T).map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=`<p class="time"><b>${rm(o.m)} m</b> on foot or wheels in total. Roughly ${Math.max(1,Math.round(o.m/36))} min at a slow walk or ${Math.max(1,Math.round(o.m/60))} min pushing a chair${o.lifts?', plus waiting for '+(o.lifts>1?'lifts':'the lift'):''}.</p>`;
   if(o.warn) h+=`<p class="warn">${o.warn}</p>`;
-  h+='<div class="row"><button class="btn only-mobile" type="button" id="showMap">Show on map</button><button class="btn ghost" type="button" id="clr">Clear destination</button></div>';
-  el.innerHTML=h; el.querySelector('h2').textContent=T.name;
-  el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{state.opt=+b.dataset.i;refresh(true);}); $('clr').onclick=()=>{state.dest=null;state.focus=null;refresh(true); if(isMobile()) setTab('places');}; $('showMap').onclick=()=>setTab('map'); }
-function refresh(refit){ drawFrom(); drawRoute(); drawList(); buildRail(); drawStrip(); if(refit) fit(); dirty=true; }
+  h+=`<div class="row"><button class="btn only-mobile" type="button" id="showMap">Show on map</button><button class="btn ghost" type="button" id="next">I'm here now, where next?</button>${T.isCabin?'':`<button class="btn ghost" type="button" id="favT" aria-pressed="${isFav(T)}">${isFav(T)?'★ Favourite':'☆ Add to favourites'}</button>`}<button class="btn ghost" type="button" id="clr">Clear destination</button></div>`;
+  el.innerHTML=h; el.querySelector('h2').textContent=T.name; el.querySelector('.fromname').textContent=S.name;
+  el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{state.opt=+b.dataset.i;refresh(true);}); $('clr').onclick=()=>{state.dest=null;state.focus=null;refresh(true); if(isMobile()) setTab('places');}; $('showMap').onclick=()=>setTab('map');
+  $('next').onclick=()=>{ const d=state.dest; state.dest=null; setStart(d); if(isMobile()) setTab('places'); };
+  if($('favT')) $('favT').onclick=()=>toggleFav(T); }
+function refresh(refit){ drawTrip(); drawRoute(); drawList(); buildRail(); drawStrip(); if(refit) fit(); dirty=true; }
 
 /* ---------- boot ---------- */
 function start(saved){
-  colors(); size(); const hp=(location.hash||'').slice(1).split(','); const hs=/^\d{4,5}$/.test(hp[0])?'c'+hp[0]:null; if(hs&&locOf(hs)) store.set('anthem-start',hs);
+  colors(); size(); const hp=(location.hash||'').slice(1).split(','); const hs=/^\d{4,5}$/.test(hp[0])?'c'+hp[0]:null; 
   if(hp[1]&&locOf(hp[1])) saved=Object.assign({},saved,{dest:hp[1]});
-  const s=hs&&locOf(hs)?hs:(saved&&saved.start)||store.get('anthem-start'); if(s&&locOf(s)){ state.start=s; const l=locOf(s); if(l.isCabin) $('cabin').value=l.num; }
-  if(saved&&saved.dest&&locOf(saved.dest)) state.dest=saved.dest;
+  // 'anthem-start' is where older versions kept the cabin
+  const cab=[hs,saved&&saved.cabin,store.get('anthem-cabin'),store.get('anthem-start')].find(r=>r&&r[0]==='c'&&locOf(r));
+  if(cab){ state.cabin=cab; store.set('anthem-cabin',cab); $('cabin').value=cab.slice(1); }
+  state.start=saved&&saved.start&&locOf(saved.start)?saved.start:cab||null;
+  if(saved&&saved.dest&&locOf(saved.dest)&&saved.dest!==state.start) state.dest=saved.dest;
+  if(!state.start) state.pick='from';
   V.yaw=W>H*1.1?-1.15:-.45; drawChips(); setTab(state.start?'map':'places'); refresh(true); render(); loop();
   new ResizeObserver(()=>{ if(size()!==false){fit();render();} }).observe(cv);
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{colors();dirty=true;});
@@ -604,7 +662,7 @@ if(document.querySelector('link[rel="manifest"]')&&location.protocol==='https:')
   $('copyLink').onclick=()=>{ (navigator.clipboard?navigator.clipboard.writeText(SITE):Promise.reject()).then(()=>msg('Link copied.'),()=>msg('Could not copy. The link is shown above.')); };
 }
 const hot=window.claude&&window.claude.hot;
-if(hot&&hot.snapshot) hot.snapshot(()=>({start:state.start,dest:state.dest}));
+if(hot&&hot.snapshot) hot.snapshot(()=>({cabin:state.cabin,start:state.start,dest:state.dest}));
 if(hot&&hot.ready) hot.ready(start); else start((hot&&hot.data)||{});
 }
 </script>
