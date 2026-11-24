@@ -43,7 +43,10 @@ button,input,select{font:inherit;color:inherit}
 header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 h1{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;margin:0;letter-spacing:.02em;text-transform:uppercase}
 header p{margin:0;color:var(--muted);font-size:14px}
-.hdr{margin-left:auto;min-height:36px;padding:4px 12px;font-size:14px}
+.hbtns{margin-left:auto;display:flex;gap:8px}
+.hdr{min-height:36px;padding:4px 12px;font-size:14px}
+.btn:disabled{opacity:.45;cursor:default}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
 dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:18px;width:min(430px,calc(100vw - 32px));max-height:calc(100% - 32px)}
 dialog[open]{display:flex;flex-direction:column;gap:10px}
 dialog::backdrop{background:rgba(5,12,20,.6)}
@@ -66,7 +69,7 @@ canvas:active{cursor:grabbing}
 .legend{position:absolute;left:62px;bottom:8px;right:8px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);pointer-events:none}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 .hint{position:absolute;right:56px;top:10px;font-size:12px;color:var(--muted);pointer-events:none;text-align:right}
-.panel{min-height:0;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:14px}
+.panel{min-height:0;overflow-y:auto;scrollbar-color:var(--line) transparent;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:14px}
 .eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 4px}
 .from{display:flex;flex-direction:column;gap:6px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -156,8 +159,11 @@ details ul{padding-left:18px}
 <header>
   <h1>Anthem Wayfinder</h1>
   <p>Step-free routes on Anthem of the Seas, from wherever you are to wherever you want to be. Unofficial; built from the published deck plans.</p>
-  <button class="btn ghost hdr" type="button" id="install" hidden>Install app</button>
-  <button class="btn ghost hdr" type="button" id="share" hidden>Share</button>
+  <div class="hbtns">
+    <button class="btn ghost hdr" type="button" id="install" hidden>Install app</button>
+    <button class="btn ghost hdr" type="button" id="share" hidden>Share</button>
+    <button class="btn ghost hdr" type="button" id="about">About</button>
+  </div>
 </header>
 <dialog id="shareDlg" aria-labelledby="shareH">
   <h2 id="shareH">Share Anthem Wayfinder</h2>
@@ -172,6 +178,19 @@ details ul{padding-left:18px}
   <p class="time" id="shareMsg" aria-live="polite"></p>
   <p class="time">Send opens this device's share sheet: AirDrop, Quick Share, Bluetooth, messages and whatever else it offers. The offline copy is one file that needs no internet at all; the other person opens it in their browser.</p>
   <div class="row"><button class="btn ghost" type="button" id="shareClose">Close</button></div>
+</dialog>
+<dialog id="aboutDlg" aria-labelledby="aboutH">
+  <h2 id="aboutH">About Anthem Wayfinder</h2>
+  <p>A free, unofficial map of Anthem of the Seas for getting around without stairs. Say where you are and where you want to be, and it gives a lift-only route with the distance.</p>
+  <p>It was made by Ryan, a passenger, not by Royal Caribbean, and is not affiliated with them. Positions and distances are estimates; see "How far to trust this map" for the details.</p>
+  <p>Nothing you enter leaves this device. Your cabin number, favourites and last trip are kept in this browser only.</p>
+  <p>The map is open source. Corrections and suggestions are welcome on GitHub: <a href="https://github.com/Biztactix-Ryan/anthem-wayfinder" target="_blank" rel="noopener" style="color:var(--accent);overflow-wrap:anywhere">github.com/Biztactix-Ryan/anthem-wayfinder</a></p>
+  <div id="tipBox" hidden>
+    <p><b>Found it useful?</b> A tip is welcome and never expected. It goes towards keeping the map up to date.</p>
+    <div class="row" style="margin-top:8px"><a class="btn" id="tip" target="_blank" rel="noopener">Send a tip on Ko-fi</a></div>
+    <p class="time" style="margin-top:6px">Opens in your browser and needs an internet connection.</p>
+  </div>
+  <div class="row"><button class="btn ghost" type="button" id="aboutClose">Close</button></div>
 </dialog>
 
 <div class="app" data-tab="map">
@@ -217,6 +236,11 @@ details ul{padding-left:18px}
     <p class="route-empty">No route yet. Under Places, choose where you are and where you want to go, or tap a place on the map.</p>
 
     <section class="places" aria-labelledby="toh">
+      <div class="row" style="margin-bottom:14px">
+        <button class="btn ghost" type="button" id="nearWc">Nearest toilet</button>
+        <button class="btn ghost" type="button" id="nearLift">Nearest lift</button>
+        <span class="time" id="nearNote">Choose where you are first.</span>
+      </div>
       <p class="eyebrow" id="toh">Where to?</p>
       <div class="find">
         <input id="q" type="search" placeholder="Search places, e.g. Solarium" aria-label="Search places">
@@ -255,6 +279,7 @@ details ul{padding-left:18px}
 
 <script>
 const D=/*DATA*/null;
+const TIP_URL='https://ko-fi.com/bizryan';         // tipping page linked from the About screen; the tip section stays hidden while this is empty
 const M=0.62;            // metres per plan unit (ship length 347 m over 559.6 units)
 const YC=360;            // midship in plan units
 const BANKS={
@@ -360,7 +385,10 @@ function cabinLoc(num){
   const c=d.cab.find(c=>c[0]===num); if(!c) return null;
   return {ref:'c'+num,isCabin:true,num,deck,x:c[1]+c[3]/2,y:c[2]+c[4]/2,ry:0,name:'Cabin '+num,rect:c};
 }
-function locOf(ref){ if(!ref) return null; if(ref[0]==='c') return cabinLoc(ref.slice(1)); const v=VENUES.find(v=>v.id===ref); return v?Object.assign({ref},v):null; }
+function locOf(ref){ if(!ref) return null; if(ref[0]==='c') return cabinLoc(ref.slice(1));
+  if(ref[0]==='l'){ const B=BANKS[ref[1]],deck=+ref.slice(2);   // a lift bank on one deck, e.g. lF9
+    return B&&D[deck]&&serves(B,deck)?{ref,isLift:true,deck,x:0,y:B.y,ry:0,name:(B.key==='F'?'Forward':'Aft')+' lifts',the:'the '+B.name,note:''}:null; }
+  const v=VENUES.find(v=>v.id===ref); return v?Object.assign({ref},v):null; }
 const zoneY=y=>y<300?'forward':y<470?'midship':'aft';
 const sideX=x=>x<-8?'port side':x>8?'starboard side':'centre';
 const whereIs=l=>`Deck ${l.deck} · ${zoneY(l.y)} · ${sideX(l.x)}`;
@@ -399,11 +427,12 @@ const rm=m=>m<10?Math.round(m):Math.round(m/5)*5;
 function longest(o){ let b=null; o.legs.forEach(l=>{if(l.t==='walk'&&(!b||l.m>b.m))b=l;}); return b; }
 function stepsFor(o,S,T){
   const st=[]; const dirw=dy=>dy<0?'forward, toward the bow':'aft, toward the stern';
-  const isle=S.noLift&&T.noLift, sn=S.noLift&&!isle?`the spot below ${S.name}`:S.name, tn=T.noLift&&!isle?`the spot below ${T.name}`:T.name;
+  const isle=S.noLift&&T.noLift, sn=S.noLift&&!isle?`the spot below ${S.name}`:S.the||S.name, tn=T.noLift&&!isle?`the spot below ${T.name}`:T.the||T.name;
   o.legs.forEach((l,i)=>{
     const first=i===0,last=i===o.legs.length-1;
     if(l.t==='lift'){ const n=Math.abs(l.to-l.from); st.push(`Take the ${l.bank.name} ${l.to>l.from?'up':'down'} ${n} deck${n>1?'s':''} to <b>Deck ${l.to}</b>.`); return; }
     const nextLift=o.legs[i+1], prevLift=o.legs[i-1]; const m=rm(l.m); let s='';
+    if(first&&S.isLift&&nextLift&&l.m<1) return;   // already standing at this lift bank
     if(first&&S.isCabin){
       let turn=''; if(Math.abs(S.x)>10&&Math.abs(l.dy)>3){ const fwd=l.dy<0; turn=(S.x<0)===fwd?' and turn left':' and turn right'; }
       s=`Leave cabin ${S.num}${turn}. `;
@@ -559,7 +588,8 @@ function buildRail(){ const rail=$('rail'); rail.innerHTML=''; const all=documen
   const r=opts[state.opt]; const on=new Set(); if(r) r.legs.forEach(l=>{ if(l.t==='walk') on.add(l.deck); });
   for(const n of [...DECKS].reverse()){ const b=document.createElement('button'); b.type='button'; b.textContent=n; b.setAttribute('aria-label','Deck '+n); b.setAttribute('aria-pressed',state.focus===n); if(on.has(n)) b.className='on-route'; b.onclick=()=>{state.focus=state.focus===n?null:n; refresh(true);}; rail.appendChild(b); } }
 function setCabin(ref){ state.cabin=ref; store.set('anthem-cabin',ref); $('cabin').value=ref.slice(1); setStart(ref); }
-function setStart(ref){ state.start=ref; state.opt=0; if(state.dest===ref) state.dest=null; $('cabinErr').hidden=true; state.focus=null; state.pick='to'; refresh(true); if(isMobile()&&appEl.dataset.tab==='places'&&state.dest) setTab('route'); }
+function setStart(ref){ state.start=ref; state.opt=0; if(state.dest===ref||(state.dest&&state.dest[0]==='l')) state.dest=null;   // a lift destination only makes sense from the old start
+  $('cabinErr').hidden=true; state.focus=null; state.pick='to'; refresh(true); if(isMobile()&&appEl.dataset.tab==='places'&&state.dest) setTab('route'); }
 function setDest(ref){ if(state.start===ref) state.start=null; state.dest=ref; state.opt=0;
   if(state.start){ state.focus=null; state.pick='to'; } else { const l=locOf(ref); state.focus=l?l.deck:null; state.pick='from'; }
   refresh(true); if(isMobile()&&appEl.dataset.tab==='places'){ if(state.start) setTab('route'); else document.querySelector('.panel').scrollTop=0; } }
@@ -567,6 +597,13 @@ $('cabinForm').addEventListener('submit',e=>{ e.preventDefault(); const v=$('cab
   if(!l){ const er=$('cabinErr'); er.textContent=v?`No cabin ${v} on the deck plans. Cabin numbers run from 3146 to 13718; check your SeaPass card.`:'Type the cabin number from your SeaPass card, for example 9234.'; er.hidden=false; return; }
   setCabin(l.ref); });
 $('swap').onclick=()=>{ const a=state.start; state.start=state.dest; state.dest=a; state.opt=0; state.pick=state.start?'to':'from'; refresh(true); };
+// "nearest" counts each lift ride as 40 m of walking, so a toilet on this deck beats a slightly closer one a lift ride away
+$('nearWc').onclick=()=>{ const S=locOf(state.start); if(!S) return; let best=null,bm=1e9;
+  for(const v of VENUES) if(v.cat==='wc'&&v.id!==S.ref){ const m=Math.min(...routes(S,v).map(o=>o.m+40*o.lifts)); if(m<bm){ bm=m; best=v.id; } }
+  if(best) setDest(best); };
+$('nearLift').onclick=()=>{ const S=locOf(state.start); if(!S) return; const d=S.noLift?15:S.deck; let best=null,bm=1e9;
+  for(const B of Object.values(BANKS)) if(serves(B,d)&&'l'+B.key+d!==S.ref){ const m=walk(d,anch(S,B.y),LP(B)).m; if(m<bm){ bm=m; best='l'+B.key+d; } }
+  if(best) setDest(best); };
 $('pickFrom').onclick=()=>{state.pick='from';refresh(false);};
 $('pickTo').onclick=()=>{state.pick='to';refresh(false);};
 $('q').addEventListener('input',e=>{state.q=e.target.value.toLowerCase();drawList();});
@@ -599,7 +636,7 @@ function drawList(){ const el=$('list'); el.innerHTML=''; const S=locOf(state.st
 function drawTrip(){ const S=locOf(state.start),T=locOf(state.dest),el=$('fromline');
   const fill=(id,L,ph,on)=>{ const b=$(id); b.setAttribute('aria-pressed',on); b.classList.toggle('empty',!L); b.querySelector('.v').textContent=L?L.name:ph; b.querySelector('.w').textContent=L?whereIs(L):''; };
   fill('pickFrom',S,'Choose where you are',state.pick==='from'); fill('pickTo',T,'Choose where to go',state.pick==='to');
-  $('swap').disabled=!(state.start||state.dest);
+  $('swap').disabled=!(state.start||state.dest); $('nearWc').disabled=$('nearLift').disabled=!S; $('nearNote').hidden=!!S;
   let h='';
   if(S&&S.isCabin){ const a=walk(S.deck,anch(S,BANKS.A.y),LP(BANKS.A)).m,f=walk(S.deck,anch(S,BANKS.F.y),LP(BANKS.F)).m; h=`Nearest lifts to cabin ${S.num}: <b>${a<=f?'aft':'forward'}, about ${rm(Math.min(a,f))} m</b> (the ${a<=f?'forward':'aft'} lifts are ${rm(Math.max(a,f))} m).`; }
   else if(!state.cabin) h='Add your cabin number to start from your own door. It stays on this device.';
@@ -616,12 +653,15 @@ function drawRoute(){ const el=$('route'),S=locOf(state.start),T=locOf(state.des
   h+='<ol class="steps">'+stepsFor(o,S,T).map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=`<p class="time"><b>${rm(o.m)} m</b> on foot or wheels in total. Roughly ${Math.max(1,Math.round(o.m/36))} min at a slow walk or ${Math.max(1,Math.round(o.m/60))} min pushing a chair${o.lifts?', plus waiting for '+(o.lifts>1?'lifts':'the lift'):''}.</p>`;
   if(o.warn) h+=`<p class="warn">${o.warn}</p>`;
-  h+=`<div class="row"><button class="btn only-mobile" type="button" id="showMap">Show on map</button><button class="btn ghost" type="button" id="next">I'm here now, where next?</button>${T.isCabin?'':`<button class="btn ghost" type="button" id="favT" aria-pressed="${isFav(T)}">${isFav(T)?'★ Favourite':'☆ Add to favourites'}</button>`}<button class="btn ghost" type="button" id="clr">Clear destination</button></div>`;
+  h+=`<div class="row"><button class="btn only-mobile" type="button" id="showMap">Show on map</button><button class="btn ghost" type="button" id="next">I'm here now, where next?</button>${!T.id?'':`<button class="btn ghost" type="button" id="favT" aria-pressed="${isFav(T)}">${isFav(T)?'★ Favourite':'☆ Add to favourites'}</button>`}<button class="btn ghost" type="button" id="clr">Clear destination</button></div>`;
   el.innerHTML=h; el.querySelector('h2').textContent=T.name; el.querySelector('.fromname').textContent=S.name;
   el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{state.opt=+b.dataset.i;refresh(true);}); $('clr').onclick=()=>{state.dest=null;state.focus=null;refresh(true); if(isMobile()) setTab('places');}; $('showMap').onclick=()=>setTab('map');
   $('next').onclick=()=>{ const d=state.dest; state.dest=null; setStart(d); if(isMobile()) setTab('places'); };
   if($('favT')) $('favT').onclick=()=>toggleFav(T); }
-function refresh(refit){ drawTrip(); drawRoute(); drawList(); buildRail(); drawStrip(); if(refit) fit(); dirty=true; }
+const TRIP_HOURS=3; let tripKey='';
+const tripNow=()=>(state.start||'')+'>'+(state.dest||'');
+function saveTrip(){ const k=tripNow(); if(k===tripKey) return; tripKey=k; store.set('anthem-trip',k==='>'?null:JSON.stringify({start:state.start,dest:state.dest,t:Date.now()})); }
+function refresh(refit){ saveTrip(); drawTrip(); drawRoute(); drawList(); buildRail(); drawStrip(); if(refit) fit(); dirty=true; }
 
 /* ---------- boot ---------- */
 function start(saved){
@@ -630,8 +670,13 @@ function start(saved){
   // 'anthem-start' is where older versions kept the cabin
   const cab=[hs,saved&&saved.cabin,store.get('anthem-cabin'),store.get('anthem-start')].find(r=>r&&r[0]==='c'&&locOf(r));
   if(cab){ state.cabin=cab; store.set('anthem-cabin',cab); $('cabin').value=cab.slice(1); }
-  state.start=saved&&saved.start&&locOf(saved.start)?saved.start:cab||null;
-  if(saved&&saved.dest&&locOf(saved.dest)&&saved.dest!==state.start) state.dest=saved.dest;
+  // the last trip survives closing the app for TRIP_HOURS (a link that names a cabin or place overrides it); after that, start from the cabin again
+  let trip=null; try{ trip=JSON.parse(store.get('anthem-trip')||'null'); }catch(e){}
+  if(!trip||!(Date.now()-trip.t<TRIP_HOURS*3600e3)||hs||hp[1]) trip={};
+  const first=(...r)=>r.find(x=>x&&locOf(x))||null;
+  state.start=first(saved&&saved.start,trip.start,cab);
+  const d=first(saved&&saved.dest,trip.dest); if(d&&d!==state.start) state.dest=d;
+  tripKey=tripNow();
   if(!state.start) state.pick='from';
   V.yaw=W>H*1.1?-1.15:-.45; drawChips(); setTab(state.start?'map':'places'); refresh(true); render(); loop();
   new ResizeObserver(()=>{ if(size()!==false){fit();render();} }).observe(cv);
@@ -661,6 +706,8 @@ if(document.querySelector('link[rel="manifest"]')&&location.protocol==='https:')
     navigator.share({files:[file],title:info.title}).catch(()=>{}); };
   $('copyLink').onclick=()=>{ (navigator.clipboard?navigator.clipboard.writeText(SITE):Promise.reject()).then(()=>msg('Link copied.'),()=>msg('Could not copy. The link is shown above.')); };
 }
+{ const dlg=$('aboutDlg'); if(TIP_URL){ $('tip').href=TIP_URL; $('tipBox').hidden=false; }
+  $('about').onclick=()=>dlg.showModal(); $('aboutClose').onclick=()=>dlg.close(); dlg.addEventListener('click',e=>{ if(e.target===dlg) dlg.close(); }); }
 const hot=window.claude&&window.claude.hot;
 if(hot&&hot.snapshot) hot.snapshot(()=>({cabin:state.cabin,start:state.start,dest:state.dest}));
 if(hot&&hot.ready) hot.ready(start); else start((hot&&hot.data)||{});
