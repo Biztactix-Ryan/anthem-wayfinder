@@ -1,6 +1,6 @@
 // Offline cache for Anthem Wayfinder: serve from cache at once, refresh the cache in the background.
-const CACHE = 'wayfinder-v1';
-const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'wayfinder-v2';
+const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './anthem-wayfinder.html'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
 });

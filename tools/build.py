@@ -5,7 +5,11 @@ root = pathlib.Path(__file__).resolve().parent.parent
 page = (root / 'src' / 'page.html').read_text()
 data = (root / 'data' / 'decks.json').read_text()
 assert page.count('/*DATA*/null') == 1
-frag = page.replace('/*DATA*/null', data)
+sys.path.insert(0, str(root / 'tools'))
+import make_qr
+SITE = 'https://biztactix-ryan.github.io/anthem-wayfinder/'   # the address the share dialog's QR code points at
+assert page.count('<!--QR-->') == 1
+frag = page.replace('/*DATA*/null', data).replace('<!--QR-->', make_qr.svg(make_qr.matrix(SITE)))
 html = (
     '<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
     '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'

@@ -45,7 +45,14 @@ button,input,select{font:inherit;color:inherit}
 header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 h1{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;margin:0;letter-spacing:.02em;text-transform:uppercase}
 header p{margin:0;color:var(--muted);font-size:14px}
-#install{margin-left:auto;min-height:36px;padding:4px 12px;font-size:14px}
+.hdr{margin-left:auto;min-height:36px;padding:4px 12px;font-size:14px}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:18px;width:min(430px,calc(100vw - 32px));max-height:calc(100% - 32px)}
+dialog[open]{display:flex;flex-direction:column;gap:10px}
+dialog::backdrop{background:rgba(5,12,20,.6)}
+dialog h2{font-family:var(--display);font-size:26px;line-height:1.05;margin:0;text-transform:uppercase;letter-spacing:.02em}
+dialog p{margin:0}
+.qr svg{display:block;width:min(250px,64vw);height:auto;margin:0 auto;border-radius:4px}
+.url{font-size:14px;text-align:center;overflow-wrap:anywhere;font-weight:700}
 .app{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:12px;min-height:0}
 .map{position:relative;min-height:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg)}
 canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
@@ -135,8 +142,23 @@ details ul{padding-left:18px}
 <header>
   <h1>Anthem Wayfinder</h1>
   <p>Step-free routes on Anthem of the Seas, from your cabin door to anywhere on board. Unofficial; built from the published deck plans.</p>
-  <button class="btn ghost" type="button" id="install" hidden>Install app</button>
+  <button class="btn ghost hdr" type="button" id="install" hidden>Install app</button>
+  <button class="btn ghost hdr" type="button" id="share" hidden>Share</button>
 </header>
+<dialog id="shareDlg" aria-labelledby="shareH">
+  <h2 id="shareH">Share Anthem Wayfinder</h2>
+  <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" role="img" aria-label="QR code for the Anthem Wayfinder link" shape-rendering="crispEdges"><rect width="37" height="37" fill="#fff"/><path fill="#000" d="M4 4h7v1h-7zM13 4h2v1h-2zM16 4h4v1h-4zM21 4h4v1h-4zM26 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM14 5h4v1h-4zM19 5h1v1h-1zM22 5h2v1h-2zM26 5h1v1h-1zM32 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM12 6h4v1h-4zM18 6h1v1h-1zM22 6h2v1h-2zM26 6h1v1h-1zM28 6h3v1h-3zM32 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM13 7h2v1h-2zM18 7h3v1h-3zM22 7h1v1h-1zM26 7h1v1h-1zM28 7h3v1h-3zM32 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM14 8h3v1h-3zM18 8h2v1h-2zM22 8h2v1h-2zM26 8h1v1h-1zM28 8h3v1h-3zM32 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM13 9h1v1h-1zM15 9h1v1h-1zM17 9h3v1h-3zM22 9h3v1h-3zM26 9h1v1h-1zM32 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h1v1h-1zM20 10h1v1h-1zM22 10h1v1h-1zM24 10h1v1h-1zM26 10h7v1h-7zM12 11h3v1h-3zM17 11h2v1h-2zM20 11h4v1h-4zM4 12h3v1h-3zM8 12h5v1h-5zM14 12h1v1h-1zM17 12h1v1h-1zM19 12h3v1h-3zM24 12h3v1h-3zM30 12h1v1h-1zM4 13h1v1h-1zM8 13h2v1h-2zM14 13h1v1h-1zM16 13h1v1h-1zM20 13h1v1h-1zM24 13h3v1h-3zM29 13h1v1h-1zM32 13h1v1h-1zM5 14h3v1h-3zM10 14h1v1h-1zM12 14h2v1h-2zM22 14h1v1h-1zM26 14h1v1h-1zM28 14h1v1h-1zM30 14h3v1h-3zM6 15h1v1h-1zM9 15h1v1h-1zM15 15h5v1h-5zM21 15h3v1h-3zM31 15h1v1h-1zM8 16h3v1h-3zM16 16h3v1h-3zM20 16h2v1h-2zM23 16h1v1h-1zM25 16h3v1h-3zM29 16h1v1h-1zM31 16h2v1h-2zM5 17h3v1h-3zM9 17h1v1h-1zM13 17h1v1h-1zM16 17h1v1h-1zM20 17h3v1h-3zM24 17h3v1h-3zM29 17h1v1h-1zM32 17h1v1h-1zM7 18h1v1h-1zM9 18h6v1h-6zM16 18h1v1h-1zM24 18h1v1h-1zM26 18h1v1h-1zM29 18h1v1h-1zM31 18h2v1h-2zM4 19h1v1h-1zM8 19h2v1h-2zM11 19h1v1h-1zM14 19h5v1h-5zM20 19h2v1h-2zM26 19h4v1h-4zM31 19h1v1h-1zM4 20h1v1h-1zM7 20h2v1h-2zM10 20h2v1h-2zM13 20h2v1h-2zM16 20h2v1h-2zM19 20h3v1h-3zM25 20h3v1h-3zM29 20h1v1h-1zM31 20h2v1h-2zM6 21h1v1h-1zM11 21h1v1h-1zM16 21h3v1h-3zM24 21h1v1h-1zM26 21h1v1h-1zM29 21h2v1h-2zM32 21h1v1h-1zM4 22h1v1h-1zM7 22h1v1h-1zM10 22h3v1h-3zM16 22h2v1h-2zM22 22h1v1h-1zM25 22h4v1h-4zM31 22h2v1h-2zM5 23h2v1h-2zM8 23h2v1h-2zM12 23h1v1h-1zM14 23h1v1h-1zM16 23h3v1h-3zM20 23h2v1h-2zM23 23h3v1h-3zM27 23h3v1h-3zM31 23h1v1h-1zM4 24h1v1h-1zM6 24h3v1h-3zM10 24h2v1h-2zM13 24h1v1h-1zM15 24h3v1h-3zM19 24h3v1h-3zM23 24h6v1h-6zM12 25h1v1h-1zM16 25h2v1h-2zM20 25h5v1h-5zM28 25h1v1h-1zM30 25h3v1h-3zM4 26h7v1h-7zM12 26h1v1h-1zM14 26h1v1h-1zM18 26h1v1h-1zM23 26h2v1h-2zM26 26h1v1h-1zM28 26h2v1h-2zM31 26h2v1h-2zM4 27h1v1h-1zM10 27h1v1h-1zM12 27h2v1h-2zM15 27h1v1h-1zM17 27h3v1h-3zM21 27h4v1h-4zM28 27h2v1h-2zM31 27h2v1h-2zM4 28h1v1h-1zM6 28h3v1h-3zM10 28h1v1h-1zM12 28h1v1h-1zM14 28h4v1h-4zM19 28h3v1h-3zM24 28h5v1h-5zM32 28h1v1h-1zM4 29h1v1h-1zM6 29h3v1h-3zM10 29h1v1h-1zM13 29h2v1h-2zM16 29h1v1h-1zM18 29h1v1h-1zM20 29h2v1h-2zM23 29h1v1h-1zM27 29h2v1h-2zM30 29h1v1h-1zM32 29h1v1h-1zM4 30h1v1h-1zM6 30h3v1h-3zM10 30h1v1h-1zM12 30h1v1h-1zM14 30h1v1h-1zM16 30h1v1h-1zM18 30h1v1h-1zM20 30h3v1h-3zM27 30h3v1h-3zM32 30h1v1h-1zM4 31h1v1h-1zM10 31h1v1h-1zM12 31h1v1h-1zM16 31h3v1h-3zM20 31h2v1h-2zM24 31h5v1h-5zM31 31h1v1h-1zM4 32h7v1h-7zM12 32h1v1h-1zM16 32h2v1h-2zM19 32h8v1h-8zM28 32h1v1h-1zM31 32h2v1h-2z"/></svg></div>
+  <p class="url" id="shareUrl"></p>
+  <p>Point another phone's camera at the code to open the map. That phone needs internet for the first load; after that it works offline.</p>
+  <div class="row">
+    <button class="btn" type="button" id="shareLink">Send link</button>
+    <button class="btn ghost" type="button" id="shareFile">Send offline copy</button>
+    <button class="btn ghost" type="button" id="copyLink">Copy link</button>
+  </div>
+  <p class="time" id="shareMsg" aria-live="polite"></p>
+  <p class="time">Send opens this device's share sheet: AirDrop, Quick Share, Bluetooth, messages and whatever else it offers. The offline copy is one file that needs no internet at all; the other person opens it in their browser.</p>
+  <div class="row"><button class="btn ghost" type="button" id="shareClose">Close</button></div>
+</dialog>
 
 <div class="app" data-tab="map">
   <div class="map">
@@ -201,7 +223,7 @@ details ul{padding-left:18px}
         <li><b>Venues change</b> with refits. If a name here doesn't match the ship, the location is usually still the same space.</li>
         <li><b>Port</b> is the left side of the ship when you face the bow; <b>starboard</b> is the right. Even-numbered outside cabins numbered x1xx–x3xx are port, x5xx–x7xx starboard.</li>
       </ul>
-      <p id="installNote" hidden><b>Use it offline:</b> install this as an app while you still have internet. In Chrome or Edge, press <b>Install app</b> at the top of the page or use the install icon in the address bar. On iPhone or iPad, open it in Safari, tap Share, then <b>Add to Home Screen</b>. After that it opens from its own icon with no connection.</p>
+      <p id="installNote" hidden><b>Use it offline:</b> install this as an app while you still have internet. In Chrome or Edge, press <b>Install app</b> at the top of the page or use the install icon in the address bar. On iPhone or iPad, open it in Safari, tap Share, then <b>Add to Home Screen</b>. After that it opens from its own icon with no connection. The <b>Share</b> button at the top gives other people a QR code, the link, or an offline copy of the map.</p>
       <p>Your cabin number is saved only in this browser, so each person in your group can set their own.</p>
     </details>
   </div>
@@ -561,13 +583,27 @@ function start(saved){
   new MutationObserver(()=>{colors();dirty=true;}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{dirty=true;});
 }
-/* installable app + offline cache: only where the page ships with a manifest (the hosted copy) */
-if(document.querySelector('link[rel="manifest"]')){
-  $('installNote').hidden=false; let deferred=null;
-  if('serviceWorker' in navigator&&location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
-  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('install').hidden=false;});
-  $('install').onclick=async()=>{ if(!deferred) return; deferred.prompt(); try{await deferred.userChoice;}catch(e){} deferred=null; $('install').hidden=true; };
-  window.addEventListener('appinstalled',()=>{$('install').hidden=true;});
+/* installable app, offline cache and sharing: only on the hosted copy (it ships with a manifest and runs over https) */
+if(document.querySelector('link[rel="manifest"]')&&location.protocol==='https:'){
+  $('installNote').hidden=false; let deferred=null; const SITE=location.origin+location.pathname.replace(/index\.html$/,'');
+  const showShare=on=>{ $('share').hidden=!on; $('install').hidden=on||!deferred; };
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  showShare(true);
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;showShare(false);});
+  $('install').onclick=async()=>{ if(!deferred) return; deferred.prompt(); try{await deferred.userChoice;}catch(e){} deferred=null; showShare(true); };
+  window.addEventListener('appinstalled',()=>{deferred=null;showShare(true);});
+  const dlg=$('shareDlg'),msg=t=>{$('shareMsg').textContent=t;}; let file=null;
+  const info={title:'Anthem Wayfinder',text:'3D deck map of Anthem of the Seas with step-free routes from your cabin.'};
+  $('share').onclick=()=>{ $('shareUrl').textContent=SITE; msg(''); $('shareLink').hidden=!navigator.share; $('shareFile').hidden=!navigator.canShare;
+    if(navigator.canShare&&!file) fetch('anthem-wayfinder.html').then(r=>r.ok?r.blob():null).then(b=>{ if(b) file=new File([b],'anthem-wayfinder.html',{type:'text/html'}); }).catch(()=>{});
+    dlg.showModal(); };
+  $('shareClose').onclick=()=>dlg.close();
+  dlg.addEventListener('click',e=>{ if(e.target===dlg) dlg.close(); });
+  $('shareLink').onclick=()=>navigator.share(Object.assign({url:SITE},info)).catch(()=>{});
+  $('shareFile').onclick=()=>{ if(!file){ msg('Still fetching the offline copy. Try again in a moment.'); return; }
+    if(!navigator.canShare({files:[file]})){ msg('This device cannot send files from here. Use the link or the QR code instead.'); return; }
+    navigator.share({files:[file],title:info.title}).catch(()=>{}); };
+  $('copyLink').onclick=()=>{ (navigator.clipboard?navigator.clipboard.writeText(SITE):Promise.reject()).then(()=>msg('Link copied.'),()=>msg('Could not copy. The link is shown above.')); };
 }
 const hot=window.claude&&window.claude.hot;
 if(hot&&hot.snapshot) hot.snapshot(()=>({start:state.start,dest:state.dest}));
