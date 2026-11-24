@@ -31,6 +31,7 @@
   --warn-ink:#FFCB8A; --warn-bg:#3A2A12;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{height:100%}
 body{
   background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.45;
@@ -98,13 +99,31 @@ details{border-top:1px solid var(--line);padding-top:10px;font-size:14px}
 details summary{cursor:pointer;font-weight:700}
 details p,details ul{margin:8px 0;max-width:65ch}
 details ul{padding-left:18px}
+.tabs,.strip,.route-empty,.only-mobile{display:none}
+.route-empty{color:var(--muted);margin:0}
+.tabs button{min-height:50px;border:1px solid var(--line);background:var(--panel);border-radius:6px;font-weight:700;cursor:pointer;font-size:15px}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.strip{position:absolute;left:8px;right:8px;bottom:8px;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;text-align:left;min-height:52px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer;box-shadow:inset 4px 0 0 var(--route)}
+.strip .a{font-weight:700;overflow-wrap:anywhere}
+.strip .b{font-size:13px;color:var(--muted);grid-column:1}
+.strip .c{grid-row:1 / span 2;grid-column:2;font-weight:700;color:var(--accent);white-space:nowrap}
 @media (max-width:860px){
-  body{padding-block:8px;gap:6px}
+  body{padding-block:8px;gap:6px;grid-template-rows:auto minmax(0,1fr) auto}
   h1{font-size:24px} header p{display:none}
-  .app{grid-template-columns:1fr;grid-template-rows:minmax(250px,46%) minmax(0,1fr);gap:8px}
+  .app{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr)}
+  .app[data-tab="map"] .panel{display:none}
+  .app:not([data-tab="map"]) .map{display:none}
+  .app[data-tab="route"] .from,.app[data-tab="route"] .places,.app[data-tab="route"] details{display:none}
+  .app[data-tab="route"] .route{border-top:0;padding-top:0}
+  .app[data-tab="route"] .route[hidden]+.route-empty{display:block}
+  .app[data-tab="places"] .route{display:none}
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .strip{display:grid}
+  .only-mobile{display:inline-block}
+  .tools button{width:44px;height:44px}
   .rail{flex-direction:row;left:6px;right:54px;top:6px;bottom:auto;overflow-x:auto;overflow-y:hidden}
   .rail button{min-width:38px;min-height:36px}
-  .legend{left:8px;font-size:11px}
+  .legend{display:none}
   .hint{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
@@ -115,7 +134,7 @@ details ul{padding-left:18px}
   <p>Step-free routes on Anthem of the Seas, from your cabin door to anywhere on board. Unofficial; built from the published deck plans.</p>
 </header>
 
-<div class="app">
+<div class="app" data-tab="map">
   <div class="map">
     <canvas id="cv" tabindex="0" aria-label="3D deck map. Drag to rotate, pinch or scroll to zoom, arrow keys rotate, tap a place or cabin to select it."></canvas>
     <div class="rail" id="rail" role="group" aria-label="Show one deck"></div>
@@ -134,6 +153,7 @@ details ul{padding-left:18px}
       <span><i style="background:var(--stair)"></i>Stairs (avoided)</span>
       <span><i style="background:var(--water)"></i>Pools</span>
     </div>
+    <button class="strip" id="strip" type="button"><span class="a"></span><span class="c"></span><span class="b"></span></button>
   </div>
 
   <div class="panel">
@@ -150,8 +170,9 @@ details ul{padding-left:18px}
     </section>
 
     <section class="route" id="route" hidden aria-live="polite"></section>
+    <p class="route-empty">No destination yet. Choose one under Places, or tap a place on the map.</p>
 
-    <section aria-labelledby="toh">
+    <section class="places" aria-labelledby="toh">
       <p class="eyebrow" id="toh">Where to?</p>
       <div class="find">
         <input id="q" type="search" placeholder="Search places, e.g. Solarium" aria-label="Search places">
@@ -180,6 +201,11 @@ details ul{padding-left:18px}
     </details>
   </div>
 </div>
+<nav class="tabs" aria-label="Views">
+  <button type="button" data-tab="map">Map</button>
+  <button type="button" data-tab="route" id="tabRoute">Route</button>
+  <button type="button" data-tab="places">Places</button>
+</nav>
 
 <script>
 const D=/*DATA*/null;
@@ -380,17 +406,17 @@ function unproject(sx,sy,z){
   return [rx*c+ry*s, -rx*s+ry*c+YC];
 }
 function fit(){
-  const z0=V.zoom,px=V.px,py=V.py; V.zoom=1;V.px=0;V.py=0; const P=projector();
+  if(W<50||H<50) return; const z0=V.zoom,px=V.px,py=V.py; V.zoom=1;V.px=0;V.py=0; const P=projector();
   let a=1e9,b=-1e9,c=1e9,d=-1e9,any=false;
   for(const n of DECKS){ if(level(n)===0) continue; if(state.focus!=null&&n!==state.focus) continue; any=true;
     for(const h of D[n].hull) for(let i=0;i<h.length;i+=2){ const p=P(h[i],h[i+1],zOf(n)); a=Math.min(a,p[0]);b=Math.max(b,p[0]);c=Math.min(c,p[1]);d=Math.max(d,p[1]); } }
   if(!any){V.zoom=z0;V.px=px;V.py=py;return;}
-  const padL=W>600?70:20,padR=60,padT=W>600?30:54,padB=40;
+  const padL=W>600?70:20,padR=60,padT=W>600?30:54,padB=isMobile()?76:40;
   V.zoom=Math.min((W-padL-padR)/(b-a),(H-padT-padB)/(d-c));
   V.px=(padL-padR)/2-((a+b)/2-W/2)*V.zoom; V.py=(padT-padB)/2-((c+d)/2-H/2)*V.zoom;
   dirty=true;
 }
-function size(){ const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1; W=r.width;H=r.height; cv.width=Math.max(1,Math.round(W*dpr)); cv.height=Math.max(1,Math.round(H*dpr)); ctx.setTransform(dpr,0,0,dpr,0,0); dirty=true; }
+function size(){ const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1; if(r.width<2||r.height<2) return false; W=r.width;H=r.height; cv.width=Math.max(1,Math.round(W*dpr)); cv.height=Math.max(1,Math.round(H*dpr)); ctx.setTransform(dpr,0,0,dpr,0,0); dirty=true; }
 
 function poly(P,a,z){ ctx.moveTo(...P(a[0],a[1],z)); for(let i=2;i<a.length;i+=2) ctx.lineTo(...P(a[i],a[i+1],z)); }
 function render(){
@@ -468,11 +494,22 @@ $('vtop').onclick=()=>{V.yaw=W>H*1.1?-Math.PI/2:0;V.pitch=Math.PI/2;fit();};
 $('spread').onclick=()=>{V.gap=V.gap>=44?10:V.gap+12;fit();};
 
 /* ---------- panel ---------- */
+const isMobile=()=>window.matchMedia('(max-width:860px)').matches;
+const appEl=document.querySelector('.app');
+function setTab(t){ appEl.dataset.tab=t; document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===t)); document.querySelector('.panel').scrollTop=0; }
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+function drawStrip(){ const el=$('strip'),S=locOf(state.start),T=locOf(state.dest),o=opts[state.opt]; let a,b,c,go;
+  if(T&&S&&o){ a=T.name; b=`${rm(o.m)} m · ${o.title.toLowerCase()} · Deck ${T.noLift?15:T.deck}`; c='Steps ›'; go='route'; }
+  else if(T){ a=T.name; b=whereIs(T)+' · set your cabin for a route'; c='Set cabin ›'; go='places'; }
+  else if(S){ a='From '+S.name; b='Choose where you want to go'; c='Places ›'; go='places'; }
+  else { a='Start with your cabin number'; b='Then pick a place for a step-free route'; c='Set cabin ›'; go='places'; }
+  el.querySelector('.a').textContent=a; el.querySelector('.b').textContent=b; el.querySelector('.c').textContent=c; el.onclick=()=>setTab(go);
+  $('tabRoute').textContent=T&&S&&o?`Route · ${rm(o.m)} m`:'Route'; }
 function buildRail(){ const rail=$('rail'); rail.innerHTML=''; const all=document.createElement('button'); all.type='button'; all.className='all'; all.textContent='ALL'; all.setAttribute('aria-pressed',state.focus==null); all.onclick=()=>{state.focus=null;refresh(true);}; rail.appendChild(all);
   const r=opts[state.opt]; const on=new Set(); if(r) r.legs.forEach(l=>{ if(l.t==='walk') on.add(l.deck); });
   for(const n of [...DECKS].reverse()){ const b=document.createElement('button'); b.type='button'; b.textContent=n; b.setAttribute('aria-label','Deck '+n); b.setAttribute('aria-pressed',state.focus===n); if(on.has(n)) b.className='on-route'; b.onclick=()=>{state.focus=state.focus===n?null:n; refresh(true);}; rail.appendChild(b); } }
 function setStart(ref){ state.start=ref; state.opt=0; if(state.dest===ref) state.dest=null; store.set('anthem-start',ref); $('cabinErr').hidden=true; if(ref&&ref[0]==='c') $('cabin').value=ref.slice(1); state.focus=null; refresh(true); }
-function setDest(ref){ state.dest=ref; state.opt=0; if(state.start) state.focus=null; else { const l=locOf(ref); state.focus=l?l.deck:null; } refresh(true); if(window.matchMedia('(max-width:860px)').matches) document.querySelector('.panel').scrollTo({top:0}); }
+function setDest(ref){ state.dest=ref; state.opt=0; if(state.start) state.focus=null; else { const l=locOf(ref); state.focus=l?l.deck:null; } refresh(true); if(isMobile()&&appEl.dataset.tab==='places') setTab('route'); }
 $('cabinForm').addEventListener('submit',e=>{ e.preventDefault(); const v=$('cabin').value.trim(); const l=/^\d{4,5}$/.test(v)?cabinLoc(v):null;
   if(!l){ const er=$('cabinErr'); er.textContent=v?`No cabin ${v} on the deck plans. Cabin numbers run from 3146 to 13718; check your SeaPass card.`:'Type the cabin number from your SeaPass card, for example 9234.'; er.hidden=false; return; }
   setStart(l.ref); });
@@ -502,10 +539,10 @@ function drawRoute(){ const el=$('route'),S=locOf(state.start),T=locOf(state.des
   h+='<ol class="steps">'+stepsFor(o,S,T).map(s=>`<li>${s}</li>`).join('')+'</ol>';
   h+=`<p class="time"><b>${rm(o.m)} m</b> on foot or wheels in total. Roughly ${Math.max(1,Math.round(o.m/36))} min at a slow walk or ${Math.max(1,Math.round(o.m/60))} min pushing a chair${o.lifts?', plus waiting for '+(o.lifts>1?'lifts':'the lift'):''}.</p>`;
   if(o.warn) h+=`<p class="warn">${o.warn}</p>`;
-  h+='<div class="row"><button class="btn ghost" type="button" id="clr">Clear destination</button></div>';
+  h+='<div class="row"><button class="btn only-mobile" type="button" id="showMap">Show on map</button><button class="btn ghost" type="button" id="clr">Clear destination</button></div>';
   el.innerHTML=h; el.querySelector('h2').textContent=T.name;
-  el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{state.opt=+b.dataset.i;refresh(true);}); $('clr').onclick=()=>{state.dest=null;state.focus=null;refresh(true);}; }
-function refresh(refit){ drawFrom(); drawRoute(); drawList(); buildRail(); if(refit) fit(); dirty=true; }
+  el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{state.opt=+b.dataset.i;refresh(true);}); $('clr').onclick=()=>{state.dest=null;state.focus=null;refresh(true); if(isMobile()) setTab('places');}; $('showMap').onclick=()=>setTab('map'); }
+function refresh(refit){ drawFrom(); drawRoute(); drawList(); buildRail(); drawStrip(); if(refit) fit(); dirty=true; }
 
 /* ---------- boot ---------- */
 function start(saved){
@@ -513,8 +550,8 @@ function start(saved){
   if(hp[1]&&locOf(hp[1])) saved=Object.assign({},saved,{dest:hp[1]});
   const s=hs&&locOf(hs)?hs:(saved&&saved.start)||store.get('anthem-start'); if(s&&locOf(s)){ state.start=s; const l=locOf(s); if(l.isCabin) $('cabin').value=l.num; }
   if(saved&&saved.dest&&locOf(saved.dest)) state.dest=saved.dest;
-  V.yaw=W>H*1.1?-1.15:-.45; drawChips(); refresh(true); render(); loop();
-  new ResizeObserver(()=>{size();fit();render();}).observe(cv);
+  V.yaw=W>H*1.1?-1.15:-.45; drawChips(); setTab(state.start?'map':'places'); refresh(true); render(); loop();
+  new ResizeObserver(()=>{ if(size()!==false){fit();render();} }).observe(cv);
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{colors();dirty=true;});
   new MutationObserver(()=>{colors();dirty=true;}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{dirty=true;});
